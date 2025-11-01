@@ -26,8 +26,8 @@ export interface VerificationOrchestrator {
     sessionId: string,
     audioData: Buffer,
     sttTranscriber?: STTTranscriberWithChallenge,
-    synthClassifier?: SynthClassifierInterface,
-    spoofDetector?: SpoofDetectorInterface
+    synthClassifier?: SynthClassifier,
+    spoofDetector?: SpoofDetector
   ): Promise<VerificationResult>;
   
   /**
@@ -58,26 +58,6 @@ export interface STTTranscriberWithChallenge {
    * Transcribe audio to text and compare with challenge
    */
   transcribe(audioData: Buffer, challengePhrase: string): Promise<STTResult>;
-}
-
-/**
- * Synth Classifier interface
- */
-export interface SynthClassifierInterface {
-  /**
-   * Classify audio as human or synthetic
-   */
-  classify(audioData: Buffer): Promise<SynthResult>;
-}
-
-/**
- * Spoof Detector interface
- */
-export interface SpoofDetectorInterface {
-  /**
-   * Detect spoofed or replayed audio
-   */
-  detect(audioData: Buffer): Promise<SpoofResult>;
 }
 
 /**

@@ -28,12 +28,8 @@ export interface RateLimitResult {
   reason?: string;
 }
 
-export interface RateLimitStore {
-  increment(key: string, ttl: number): Promise<number>;
-  get(key: string): Promise<number>;
-  set(key: string, value: number, ttl: number): Promise<void>;
-  delete(key: string): Promise<void>;
-}
+// RateLimitStore interface is exported from api-gateway.ts
+import type { RateLimitStore } from './api-gateway';
 
 export interface DeviceFingerprint {
   id: string;
@@ -486,54 +482,4 @@ export class RecaptchaV3Service implements CaptchaService {
   }
 }
 
-/**
- * In-memory rate limit store (for development/testing)
- */
-export class InMemoryRateLimitStore implements RateLimitStore {
-  private store: Map<string, { value: number; expiresAt: number }> = new Map();
-  
-  async increment(key: string, ttl: number): Promise<number> {
-    const now = Date.now();
-    const entry = this.store.get(key);
-    
-    if (!entry || entry.expiresAt < now) {
-      this.store.set(key, { value: 1, expiresAt: now + ttl * 1000 });
-      return 1;
-    }
-    
-    entry.value++;
-    return entry.value;
-  }
-  
-  async get(key: string): Promise<number> {
-    const now = Date.now();
-    const entry = this.store.get(key);
-    
-    if (!entry || entry.expiresAt < now) {
-      return 0;
-    }
-    
-    return entry.value;
-  }
-  
-  async set(key: string, value: number, ttl: number): Promise<void> {
-    const now = Date.now();
-    this.store.set(key, { value, expiresAt: now + ttl * 1000 });
-  }
-  
-  async delete(key: string): Promise<void> {
-    this.store.delete(key);
-  }
-  
-  /**
-   * Clear expired entries
-   */
-  cleanup(): void {
-    const now = Date.now();
-    for (const [key, entry] of this.store.entries()) {
-      if (entry.expiresAt < now) {
-        this.store.delete(key);
-      }
-    }
-  }
-}
+// InMemoryRateLimitStore is exported from api-gateway.ts

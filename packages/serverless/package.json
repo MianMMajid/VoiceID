@@ -17,6 +17,7 @@
     "uuid": "^13.0.0"
   },
   "devDependencies": {
+    "@types/aws-lambda": "^8.10.157",
     "@types/node": "^24.9.2",
     "@vitest/coverage-v8": "^2.1.8",
     "typescript": "^5.3.3",
