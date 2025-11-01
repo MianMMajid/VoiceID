@@ -1,0 +1,39 @@
+**🚀 FINAL PROMPT: Generate PERFECT VoiceID.ai LANDING PAGE HTML – 100% Replit-Ready (Paste → LIVE 45s)**
+
+**DOMAIN**: voiceid.ai | **COLORS**: **WHITE BG** + **NEON GREEN (#00FF88)** + **EMERALD (#10B981)** Accents | **BLACK TEXT** (High Contrast)
+
+**PRODUCT PITCH**: "VoiceID.ai – **Kill 98% Bots w/ Your Voice** | **99.8% Accurate** | **<10s** | **Deepfake-Proof** | **$0.01/Pass** | **1k Free Verifs** | **YC S25 Stack**
+
+**EXACT YC S25 STYLE** (Onlook/Linear/Embedder 2025):
+- **WHITE BG** (`bg-white text-black`)
+- **NEON GREEN GRADS**: `from-neon-green to-emerald-500` (Define: `'neon-green': '#00FF88'`)
+- **MASSIVE HERO**: 9xl Font-Black, Gradient Text Hero H1
+- **PULSE BADGE**: "🎤 **YC S25 Stack** | **Live API**" (neon-green/20 border)
+- **METRICS**: 3 Cards w/ Glow (`99.8%`, `-98% Bots`, `<10s`)
+- **VIDEO PLACEHOLDER**: Green Glow Box ("🎥 Voice Demo: Speak → ✅ Human")
+- **PROBLEM SEC**: Stats List + Big 💀 Icon
+- **HOW**: **3 GLOW CARDS** (🎤 Speak | ✅ Cert | 💀 Dead) + **CODE SNIPS**
+- **PROOF**: "Powered by: ElevenLabs SpeechBrain Whisper Vercel Replit"
+- **CTA**: Giant Neon Button "**Get API Key →**"
+
+**SECTIONS** (Smooth Scroll `#id`):
+1. **HERO** (Full Screen): Badge | H1("**VoiceID**<br><span>**Kills 98%**</span><br>**Bots in 10s**") | Sub | **Dual CTA** (Green "🚀 Start Free" | Outline "Watch Demo") | Metrics Grid | Video Box
+2. **PROBLEM** (`#problem`): "**Bot Apocalypse**" | 3 Stats (🤖60% Bots | 💸$200B | 😩CAPTCHA Sucks) | Big Green 💀 Orb
+3. **HOW** (`#how`): "**3 Lines of Code**" | 3 Hover-Glow Cards w/ Icons + `vlo.verify()` Code
+4. **PROOF**: Gray Text Logos Row
+5. **FINAL CTA** (`#api-key`): "**Ready to Kill Bots?**" | "**1k Free. No CC**" | **MASSIVE GREEN BUTTON** | "DM @voiceid_ai"
+
+**TECH** (Replit Paste-Ready <15KB):
+- **TAILWIND CDN** + **Custom Neon**: `tailwind.config = { theme: { extend: { colors: { 'neon-green': '#00FF88' } } } }`
+- **Inter Font**: `body{font-family:'Inter',sans-serif;}`
+- **MOBILE 100%**: `md:text-9xl sm:flex grid-cols-3`
+- **ANIMS**: Hover Scale-105 | Shadows | Transitions
+- **JS**: **ONLY Smooth Scroll** (`querySelectorAll a[href^="#"]`)
+- **NO EXTRAS**: Pure HTML/CSS/JS | **Replace "dashboard.voiceid.ai/signup"**
+
+**OUTPUT**: **ONLY FULL `<html>...</html>`** – **TEST MOBILE** | **PASTE Replit index.html** → **⌘+Enter** → **LIVE**!
+
+**EXAMPLE H1**:
+<h1 class="text-6xl md:text-9xl font-black bg-gradient-to-r from-black to-neon-green/80 bg-clip-text">**VoiceID**<br><span class="bg-gradient-to-r from-neon-green to-emerald-500 bg-clip-text">**Kills 98%**</span><br>**Bots in 10s**</h1>
+
+**GENERATE NOW – LAUNCH voiceid.ai TONIGHT!** 🚀
