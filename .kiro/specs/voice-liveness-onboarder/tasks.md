@@ -1,0 +1,340 @@
+# Implementation Plan
+
+- [x] 1. Set up project structure and core interfaces
+  - Create directory structure for client, serverless functions, and shared types
+  - Define TypeScript interfaces for all data models (Session, VerificationResult, AuditLog)
+  - Create shared types package for use across client and backend
+  - Set up monorepo structure with package management (npm workspaces or similar)
+  - _Requirements: 5.1, 5.4_
+
+- [x] 2. Implement WebRTC audio capture client component
+  - [x] 2.1 Create WebRTC audio capture module
+    - Implement getUserMedia API integration for microphone access
+    - Add audio stream management and recording functionality
+    - Implement audio level monitoring for visual feedback
+    - Add browser compatibility checks and polyfills
+    - _Requirements: 6.1, 6.2, 6.4_
+  - [x] 2.2 Build audio processing and encoding
+    - Implement Web Audio API integration for audio processing
+    - Add audio format conversion (WebM/WAV)
+    - Implement audio compression for efficient transmission
+    - Add silence trimming functionality
+    - _Requirements: 1.3, 6.3_
+  - [x] 2.3 Create client session management
+    - Implement VLOClient interface with session lifecycle methods
+    - Add API client for backend communication
+    - Implement error handling and retry logic
+    - Add session state management
+    - _Requirements: 1.1, 1.2_
+  - [x] 2.4 Write unit tests for audio capture
+    - Create tests for WebRTC initialization and audio capture
+    - Test audio level monitoring and format conversion
+    - Test error scenarios (permission denied, unsupported browser)
+    - _Requirements: 6.5, 6.6_
+
+- [x] 3. Build verification UI components
+  - [x] 3.1 Create session initialization UI
+    - Build start verification button and permission request flow
+    - Implement microphone permission handling UI
+    - Add loading states and error messages
+    - _Requirements: 1.1, 6.5, 8.1_
+  - [x] 3.2 Implement challenge display and playback
+    - Create UI for displaying challenge text
+    - Implement audio player for TTS challenge
+    - Add visual countdown timer
+    - _Requirements: 8.1_
+  - [x] 3.3 Build audio recording UI
+    - Create recording indicator with audio level visualization
+    - Implement progress indicator during processing
+    - Add recording controls (start/stop)
+    - _Requirements: 8.2, 8.3_
+  - [x] 3.4 Create result display UI
+    - Build success/failure result screens
+    - Implement detailed feedback for failure reasons
+    - Add retry functionality for failed attempts
+    - _Requirements: 8.4, 8.5_
+
+- [x] 4. Implement API Gateway and routing
+  - [x] 4.1 Set up API Gateway infrastructure
+    - Configure API Gateway (AWS/GCP/Azure) with Terraform/IaC
+    - Set up REST endpoints for session management
+    - Configure CORS and security headers
+    - Add rate limiting rules
+    - _Requirements: 5.1, 5.3_
+  - [x] 4.2 Implement authentication middleware
+    - Create JWT token generation and validation
+    - Implement session token authentication
+    - Add API key authentication for internal services
+    - _Requirements: 7.1, 7.2_
+  - [x] 4.3 Configure CDN for audio delivery
+    - Set up CloudFront/Cloud CDN for TTS audio
+    - Configure caching rules for challenge audio
+    - Add signed URLs for secure audio access
+    - _Requirements: 1.2_
+
+- [x] 5. Build TTS Generator service
+  - [x] 5.1 Create challenge phrase generator
+    - Implement phrase bank with 100+ diverse phrases
+    - Add random phrase selection logic
+    - Create phrase validation (5-8 words, phonetically diverse)
+    - _Requirements: 1.2, 4.1_
+  - [x] 5.2 Integrate ElevenLabs TTS API
+    - Implement ElevenLabs API client
+    - Add TTS audio generation with error handling
+    - Implement retry logic with exponential backoff
+    - Add fallback to pre-generated audio on failure
+    - _Requirements: 1.2_
+  - [x] 5.3 Implement audio storage and serving
+    - Create audio upload to S3/Cloud Storage
+    - Generate signed URLs for audio access
+    - Implement audio caching strategy
+    - _Requirements: 5.4_
+  - [x] 5.4 Write unit tests for TTS service
+    - Test phrase generation and validation
+    - Test ElevenLabs API integration with mocks
+    - Test error handling and fallback logic
+    - _Requirements: 1.2_
+
+- [x] 6. Implement Verification Orchestrator service
+  - [x] 6.1 Create session management
+    - Implement session creation with unique IDs
+    - Add session state management (pending/processing/completed)
+    - Implement session expiration logic (5 min TTL)
+    - Create session storage in DynamoDB/Firestore
+    - _Requirements: 1.1, 7.1, 7.2_
+  - [x] 6.2 Build verification workflow orchestration
+    - Implement processAudio method to coordinate all checks
+    - Add parallel execution of STT, synth, and spoof checks
+    - Implement result aggregation logic
+    - Add timeout handling for 10s total limit
+    - _Requirements: 1.3, 1.4, 5.3_
+  - [x] 6.3 Implement liveness score calculation
+    - Create composite scoring algorithm from all checks
+    - Implement decision logic (all checks must pass)
+    - Add threshold validation (STT 85%, synth 0.05, spoof EER 1%)
+    - _Requirements: 2.2, 2.3, 3.3, 4.3_
+  - [x] 6.4 Add result storage and audit logging
+    - Implement verification result storage
+    - Create audit log entries for all attempts
+    - Add fraud attempt counter
+    - Implement 90-day retention policy
+    - _Requirements: 7.1, 7.2, 7.3, 7.4_
+  - [x] 6.5 Write integration tests for orchestrator
+    - Test end-to-end verification workflow
+    - Test parallel processing coordination
+    - Test timeout and error scenarios
+    - Test result aggregation logic
+    - _Requirements: 1.3, 1.4_
+
+- [x] 7. Build Audio Processor service
+  - [x] 7.1 Implement audio validation
+    - Create audio format validation (WAV/WebM)
+    - Add audio quality checks (duration, sample rate, SNR)
+    - Implement clipping detection
+    - Add audio normalization
+    - _Requirements: 1.3, 4.4_
+  - [x] 7.2 Create audio storage handler
+    - Implement audio upload to S3/Cloud Storage
+    - Add encryption at rest (AES-256)
+    - Generate audio URLs for processing services
+    - Implement audio deletion after retention period
+    - _Requirements: 5.4, 7.3_
+  - [x] 7.3 Build audio format conversion
+    - Implement resampling to 16kHz if needed
+    - Add format conversion for different models
+    - Implement silence trimming
+    - _Requirements: 1.3_
+  - [x] 7.4 Write unit tests for audio processor
+    - Test audio validation logic
+    - Test format conversion and resampling
+    - Test storage operations with mocks
+    - _Requirements: 1.3_
+
+- [x] 8. Implement STT Transcriber service
+  - [x] 8.1 Integrate Whisper API
+    - Create Whisper API client
+    - Implement audio transcription with error handling
+    - Add retry logic with 3s timeout
+    - Implement fallback to Google Speech-to-Text
+    - _Requirements: 4.1, 4.2_
+  - [x] 8.2 Build text similarity calculator
+    - Implement Levenshtein distance algorithm
+    - Add text normalization (case, punctuation)
+    - Create similarity scoring (0-100%)
+    - Implement 85% threshold validation
+    - _Requirements: 4.3, 4.4_
+  - [x] 8.3 Add transcription result formatting
+    - Create STTResult data structure
+    - Add confidence score extraction
+    - Implement match/no-match determination
+    - _Requirements: 4.2, 4.5_
+  - [x] 8.4 Write unit tests for STT service
+    - Test Whisper API integration with mocks
+    - Test similarity calculation with various inputs
+    - Test threshold validation logic
+    - _Requirements: 4.1, 4.3_
+
+- [ ] 9. Build Synth Classifier service
+  - [ ] 9.1 Integrate ElevenLabs classification API
+    - Create ElevenLabs classifier API client
+    - Implement synthetic voice detection
+    - Add error handling and retry logic (2s timeout)
+    - _Requirements: 2.1, 2.2_
+  - [x] 9.2 Implement classification result processing
+    - Create SynthResult data structure
+    - Add probability score extraction
+    - Implement 0.05 threshold validation
+    - Add model version tracking
+    - _Requirements: 2.2, 2.3, 2.4_
+  - [ ] 9.3 Add fraud detection logging
+    - Implement fraud attempt counter increment
+    - Add detailed logging for synthetic detections
+    - Create alerts for fraud patterns
+    - _Requirements: 2.4, 2.5_
+  - [ ] 9.4 Write unit tests for synth classifier
+    - Test ElevenLabs API integration with mocks
+    - Test threshold validation
+    - Test fraud logging
+    - _Requirements: 2.1, 2.2_
+
+- [x] 10. Implement Spoof Detector service
+  - [x] 10.1 Set up SpeechBrain ECAPA-TDNN model
+    - Download and configure pre-trained ECAPA-TDNN model
+    - Set up model hosting (Lambda container or SageMaker Serverless)
+    - Implement model loading and caching
+    - Optimize model for inference speed
+    - _Requirements: 3.1, 3.2_
+  - [x] 10.2 Build spoof detection inference
+    - Implement audio preprocessing for ECAPA-TDNN
+    - Create model inference pipeline
+    - Add anti-spoofing score calculation
+    - Implement 3s timeout handling
+    - _Requirements: 3.2, 3.3_
+  - [x] 10.3 Implement result processing
+    - Create SpoofResult data structure
+    - Calculate EER from model output
+    - Implement 1% EER threshold validation
+    - Add model version tracking
+    - _Requirements: 3.3, 3.4_
+  - [x] 10.4 Write unit tests for spoof detector
+    - Test model inference with sample audio
+    - Test EER calculation
+    - Test threshold validation
+    - _Requirements: 3.2, 3.3_
+
+- [x] 11. Implement error handling and monitoring
+  - [x] 11.1 Create error handling framework
+    - Define error codes and error response format
+    - Implement retry logic with exponential backoff
+    - Add circuit breaker for external services
+    - Create timeout handling for all services
+    - _Requirements: 1.5, 5.3_
+  - [x] 11.2 Set up logging and monitoring
+    - Configure CloudWatch/Stackdriver logging
+    - Implement distributed tracing (OpenTelemetry)
+    - Add performance metrics collection
+    - Create monitoring dashboards
+    - _Requirements: 5.5, 7.2_
+  - [x] 11.3 Implement alerting
+    - Create alerts for SLA violations (>10s latency)
+    - Add alerts for error rate spikes
+    - Implement fraud pattern detection alerts
+    - Set up on-call notification system
+    - _Requirements: 1.4, 1.5_
+
+- [x] 12. Build audit logging system
+  - [x] 12.1 Implement audit log storage
+    - Create audit log data model
+    - Set up tamper-evident storage (CloudWatch Logs Insights or similar)
+    - Implement 90-day retention policy
+    - Add audit log encryption
+    - _Requirements: 7.3, 7.4_
+  - [x] 12.2 Add comprehensive event logging
+    - Log all session creation events
+    - Log all verification attempts with full details
+    - Log all fraud detections
+    - Include metadata (IP, user agent, consent timestamp)
+    - _Requirements: 7.1, 7.2, 7.4_
+  - [x] 12.3 Implement audit log export
+    - Create export functionality for compliance
+    - Support standard formats (JSON, CSV)
+    - Add filtering and search capabilities
+    - _Requirements: 7.5_
+
+- [x] 13. Implement security features
+  - [x] 13.1 Add data encryption
+    - Implement TLS 1.3 for all API endpoints
+    - Add AES-256 encryption for audio at rest
+    - Implement encryption key rotation
+    - _Requirements: 5.1_
+  - [x] 13.2 Build rate limiting and DDoS protection
+    - Implement per-user rate limiting
+    - Add per-IP rate limiting
+    - Create CAPTCHA integration for suspicious activity
+    - Implement device fingerprinting
+    - _Requirements: 5.3_
+  - [x] 13.3 Add privacy controls
+    - Implement GDPR right to deletion
+    - Add data anonymization after retention period
+    - Create consent collection and storage
+    - Implement data export for user requests
+    - _Requirements: 7.3, 7.4_
+
+- [x] 14. Deploy infrastructure and services
+  - [x] 14.1 Create Infrastructure as Code
+    - Write Terraform configurations for all resources
+    - Set up separate environments (dev, staging, prod)
+    - Configure auto-scaling policies
+    - Add backup and disaster recovery
+    - _Requirements: 5.1, 5.3_
+  - [x] 14.2 Set up CI/CD pipeline
+    - Create automated build pipeline
+    - Implement automated testing in pipeline
+    - Add blue-green deployment configuration
+    - Set up rollback procedures
+    - _Requirements: 5.1_
+  - [x] 14.3 Deploy to production
+    - Deploy all serverless functions
+    - Configure API Gateway and CDN
+    - Set up monitoring and alerting
+    - Perform smoke tests
+    - _Requirements: 5.1, 5.3_
+
+- [x] 15. Performance optimization
+  - [x] 15.1 Optimize cold start performance
+    - Implement Lambda function pre-warming
+    - Optimize function package sizes
+    - Add model weight caching in /tmp
+    - Configure provisioned concurrency for critical functions
+    - _Requirements: 5.2_
+  - [x] 15.2 Implement caching strategies
+    - Cache TTS challenge audio (100 pre-generated)
+    - Add Redis caching for session data
+    - Implement CDN caching for static assets
+    - Cache model weights in function memory
+    - _Requirements: 1.2, 5.3_
+  - [x] 15.3 Optimize parallel processing
+    - Fine-tune Promise.all() coordination
+    - Optimize audio format conversion
+    - Reduce network latency with regional deployment
+    - _Requirements: 1.3, 1.4_
+
+- [x] 16. End-to-end testing and validation
+  - [x] 16.1 Perform load testing
+    - Test with 100+ concurrent sessions
+    - Measure 95th percentile latency
+    - Test cold start performance under load
+    - Validate auto-scaling behavior
+    - _Requirements: 1.4, 5.3_
+  - [x] 16.2 Conduct security testing
+    - Perform penetration testing on API endpoints
+    - Test replay attack detection
+    - Test synthetic voice detection with various AI voices
+    - Validate session hijacking prevention
+    - _Requirements: 2.1, 3.1_
+  - [x] 16.3 Run acceptance testing
+    - Test across browsers (Chrome, Firefox, Safari, Edge)
+    - Test with various microphone qualities
+    - Test with different accents and languages
+    - Measure false positive/negative rates
+    - _Requirements: 6.4, 8.1_

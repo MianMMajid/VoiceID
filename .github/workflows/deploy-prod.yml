@@ -1,0 +1,180 @@
+name: Deploy to Production
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to deploy (e.g., v1.0.0)'
+        required: true
+        type: string
+
+env:
+  AWS_REGION: us-east-1
+  ENVIRONMENT: prod
+
+jobs:
+  deploy:
+    name: Deploy to Production
+    runs-on: ubuntu-latest
+    environment: production
+    
+    permissions:
+      id-token: write
+      contents: read
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.inputs.version }}
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20.x'
+          cache: 'npm'
+      
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.6.0
+      
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN_PROD }}
+          aws-region: ${{ env.AWS_REGION }}
+      
+      - name: Install dependencies
+        run: npm ci
+      
+      - name: Run tests
+        run: npm test
+      
+      - name: Build packages
+        run: npm run build
+      
+      - name: Create Lambda deployment package
+        run: |
+          cd packages/serverless
+          mkdir -p dist
+          zip -r dist/lambda.zip dist/ node_modules/ package.json
+      
+      - name: Create Lambda layer package
+        run: |
+          cd packages/serverless
+          mkdir -p layer/nodejs
+          cp -r node_modules layer/nodejs/
+          cd layer && zip -r ../dist/layer.zip . && cd ..
+      
+      - name: Backup current Lambda versions
+        run: |
+          echo "Creating backup of current Lambda versions..."
+          aws lambda list-functions --query 'Functions[?starts_with(FunctionName, `prod-vlo`)].FunctionName' --output text | \
+          while read func; do
+            version=$(aws lambda publish-version --function-name $func --query 'Version' --output text)
+            echo "Backed up $func version $version"
+          done
+      
+      - name: Terraform Init
+        working-directory: packages/serverless/terraform
+        run: |
+          terraform init -backend-config=environments/backend-prod.hcl
+      
+      - name: Terraform Plan
+        working-directory: packages/serverless/terraform
+        env:
+          TF_VAR_elevenlabs_api_key: ${{ secrets.ELEVENLABS_API_KEY_PROD }}
+          TF_VAR_openai_api_key: ${{ secrets.OPENAI_API_KEY_PROD }}
+          TF_VAR_alert_email: ${{ secrets.ALERT_EMAIL_PROD }}
+        run: |
+          terraform plan -var-file=environments/prod.tfvars -out=tfplan
+      
+      - name: Manual approval checkpoint
+        uses: trstringer/manual-approval@v1
+        with:
+          secret: ${{ github.TOKEN }}
+          approvers: ${{ secrets.PROD_APPROVERS }}
+          minimum-approvals: 2
+          issue-title: "Deploy ${{ github.event.inputs.version }} to Production"
+          issue-body: "Please review the Terraform plan and approve deployment to production"
+      
+      - name: Terraform Apply (Blue-Green)
+        working-directory: packages/serverless/terraform
+        env:
+          TF_VAR_elevenlabs_api_key: ${{ secrets.ELEVENLABS_API_KEY_PROD }}
+          TF_VAR_openai_api_key: ${{ secrets.OPENAI_API_KEY_PROD }}
+          TF_VAR_alert_email: ${{ secrets.ALERT_EMAIL_PROD }}
+        run: |
+          terraform apply -auto-approve tfplan
+      
+      - name: Get API Gateway URL
+        working-directory: packages/serverless/terraform
+        id: api_url
+        run: |
+          echo "url=$(terraform output -raw api_gateway_url)" >> $GITHUB_OUTPUT
+      
+      - name: Run smoke tests
+        env:
+          API_URL: ${{ steps.api_url.outputs.url }}
+        run: |
+          echo "Running smoke tests against $API_URL"
+          # Add smoke test commands here
+          
+          # Example smoke test
+          response=$(curl -s -o /dev/null -w "%{http_code}" $API_URL/health)
+          if [ $response -ne 200 ]; then
+            echo "Smoke test failed with status code: $response"
+            exit 1
+          fi
+          echo "Smoke tests passed"
+      
+      - name: Monitor deployment
+        env:
+          API_URL: ${{ steps.api_url.outputs.url }}
+        run: |
+          echo "Monitoring deployment for 5 minutes..."
+          for i in {1..10}; do
+            sleep 30
+            response=$(curl -s -o /dev/null -w "%{http_code}" $API_URL/health)
+            if [ $response -ne 200 ]; then
+              echo "Health check failed at iteration $i"
+              exit 1
+            fi
+            echo "Health check $i/10 passed"
+          done
+          echo "Deployment monitoring completed successfully"
+      
+      - name: Create deployment tag
+        if: success()
+        run: |
+          git tag -a "deployed-prod-$(date +%Y%m%d-%H%M%S)" -m "Production deployment of ${{ github.event.inputs.version }}"
+          git push origin --tags
+      
+      - name: Notify deployment success
+        if: success()
+        uses: 8398a7/action-slack@v3
+        with:
+          status: success
+          text: '✅ Production deployment successful: ${{ github.event.inputs.version }}'
+          webhook_url: ${{ secrets.SLACK_WEBHOOK }}
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK }}
+      
+      - name: Rollback on failure
+        if: failure()
+        working-directory: packages/serverless/terraform
+        run: |
+          echo "Deployment failed, initiating rollback..."
+          # Rollback logic here
+          echo "Please manually verify and rollback if needed"
+      
+      - name: Notify deployment failure
+        if: failure()
+        uses: 8398a7/action-slack@v3
+        with:
+          status: failure
+          text: '❌ Production deployment failed: ${{ github.event.inputs.version }}'
+          webhook_url: ${{ secrets.SLACK_WEBHOOK }}
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK }}

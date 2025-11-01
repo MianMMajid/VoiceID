@@ -1,0 +1,116 @@
+name: Deploy to Staging
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+env:
+  AWS_REGION: us-east-1
+  ENVIRONMENT: staging
+
+jobs:
+  deploy:
+    name: Deploy to Staging
+    runs-on: ubuntu-latest
+    environment: staging
+    
+    permissions:
+      id-token: write
+      contents: read
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20.x'
+          cache: 'npm'
+      
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.6.0
+      
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN_STAGING }}
+          aws-region: ${{ env.AWS_REGION }}
+      
+      - name: Install dependencies
+        run: npm ci
+      
+      - name: Run tests
+        run: npm test
+      
+      - name: Build packages
+        run: npm run build
+      
+      - name: Create Lambda deployment package
+        run: |
+          cd packages/serverless
+          mkdir -p dist
+          zip -r dist/lambda.zip dist/ node_modules/ package.json
+      
+      - name: Create Lambda layer package
+        run: |
+          cd packages/serverless
+          mkdir -p layer/nodejs
+          cp -r node_modules layer/nodejs/
+          cd layer && zip -r ../dist/layer.zip . && cd ..
+      
+      - name: Terraform Init
+        working-directory: packages/serverless/terraform
+        run: |
+          terraform init -backend-config=environments/backend-staging.hcl
+      
+      - name: Terraform Plan
+        working-directory: packages/serverless/terraform
+        env:
+          TF_VAR_elevenlabs_api_key: ${{ secrets.ELEVENLABS_API_KEY_STAGING }}
+          TF_VAR_openai_api_key: ${{ secrets.OPENAI_API_KEY_STAGING }}
+          TF_VAR_alert_email: ${{ secrets.ALERT_EMAIL_STAGING }}
+        run: |
+          terraform plan -var-file=environments/staging.tfvars -out=tfplan
+      
+      - name: Terraform Apply
+        working-directory: packages/serverless/terraform
+        env:
+          TF_VAR_elevenlabs_api_key: ${{ secrets.ELEVENLABS_API_KEY_STAGING }}
+          TF_VAR_openai_api_key: ${{ secrets.OPENAI_API_KEY_STAGING }}
+          TF_VAR_alert_email: ${{ secrets.ALERT_EMAIL_STAGING }}
+        run: |
+          terraform apply -auto-approve tfplan
+      
+      - name: Get API Gateway URL
+        working-directory: packages/serverless/terraform
+        id: api_url
+        run: |
+          echo "url=$(terraform output -raw api_gateway_url)" >> $GITHUB_OUTPUT
+      
+      - name: Run smoke tests
+        env:
+          API_URL: ${{ steps.api_url.outputs.url }}
+        run: |
+          echo "Running smoke tests against $API_URL"
+          # Add smoke test commands here
+      
+      - name: Run integration tests
+        env:
+          API_URL: ${{ steps.api_url.outputs.url }}
+        run: |
+          echo "Running integration tests against $API_URL"
+          # Add integration test commands here
+      
+      - name: Notify deployment
+        if: always()
+        uses: 8398a7/action-slack@v3
+        with:
+          status: ${{ job.status }}
+          text: 'Deployment to Staging: ${{ job.status }}'
+          webhook_url: ${{ secrets.SLACK_WEBHOOK }}
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK }}

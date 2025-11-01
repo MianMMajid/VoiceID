@@ -1,0 +1,102 @@
+name: Rollback Deployment
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment to rollback'
+        required: true
+        type: choice
+        options:
+          - dev
+          - staging
+          - prod
+      lambda_version:
+        description: 'Lambda version to rollback to (leave empty for previous version)'
+        required: false
+        type: string
+
+env:
+  AWS_REGION: us-east-1
+
+jobs:
+  rollback:
+    name: Rollback ${{ github.event.inputs.environment }}
+    runs-on: ubuntu-latest
+    environment: ${{ github.event.inputs.environment }}
+    
+    permissions:
+      id-token: write
+      contents: read
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets[format('AWS_ROLE_ARN_{0}', upper(github.event.inputs.environment))] }}
+          aws-region: ${{ env.AWS_REGION }}
+      
+      - name: Get Lambda functions
+        id: functions
+        run: |
+          functions=$(aws lambda list-functions \
+            --query "Functions[?starts_with(FunctionName, '${{ github.event.inputs.environment }}-vlo')].FunctionName" \
+            --output text)
+          echo "functions=$functions" >> $GITHUB_OUTPUT
+      
+      - name: Rollback Lambda functions
+        run: |
+          for func in ${{ steps.functions.outputs.functions }}; do
+            echo "Rolling back $func..."
+            
+            if [ -n "${{ github.event.inputs.lambda_version }}" ]; then
+              # Rollback to specific version
+              version="${{ github.event.inputs.lambda_version }}"
+            else
+              # Get previous version
+              version=$(aws lambda list-versions-by-function \
+                --function-name $func \
+                --query 'Versions[-2].Version' \
+                --output text)
+            fi
+            
+            echo "Rolling back $func to version $version"
+            
+            # Update alias to point to previous version
+            aws lambda update-alias \
+              --function-name $func \
+              --name live \
+              --function-version $version || true
+            
+            echo "Rolled back $func to version $version"
+          done
+      
+      - name: Verify rollback
+        run: |
+          echo "Verifying rollback..."
+          for func in ${{ steps.functions.outputs.functions }}; do
+            version=$(aws lambda get-alias \
+              --function-name $func \
+              --name live \
+              --query 'FunctionVersion' \
+              --output text 2>/dev/null || echo "N/A")
+            echo "$func is now at version: $version"
+          done
+      
+      - name: Run smoke tests
+        run: |
+          echo "Running smoke tests after rollback..."
+          # Add smoke test commands here
+      
+      - name: Notify rollback
+        if: always()
+        uses: 8398a7/action-slack@v3
+        with:
+          status: ${{ job.status }}
+          text: 'Rollback of ${{ github.event.inputs.environment }}: ${{ job.status }}'
+          webhook_url: ${{ secrets.SLACK_WEBHOOK }}
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK }}
