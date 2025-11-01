@@ -17,8 +17,9 @@ export * from './session-storage';
 export * from './audit-logger';
 export * from './verification-orchestrator';
 export * from './stt-transcriber';
-export * from './synth-classifier';
-export * from './spoof-detector';
+// Export classes with different names to avoid conflicts with interfaces
+export { SynthClassifier as SynthClassifierImpl } from './synth-classifier';
+export { SpoofDetector as SpoofDetectorImpl } from './spoof-detector';
 export * from './encryption';
 export * from './rate-limiter';
 export * from './privacy-controls';

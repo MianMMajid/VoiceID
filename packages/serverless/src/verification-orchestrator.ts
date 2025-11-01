@@ -14,8 +14,8 @@ import {
   VerificationOrchestrator,
   TTSGenerator,
   STTTranscriberWithChallenge,
-  SynthClassifierInterface,
-  SpoofDetectorInterface
+  SynthClassifier,
+  SpoofDetector
 } from './interfaces';
 import { SessionStorage } from './session-storage';
 import { AuditLogger } from './audit-logger';
@@ -128,8 +128,8 @@ export class VoiceLivenessOrchestrator implements VerificationOrchestrator {
     sessionId: string,
     audioData: Buffer,
     sttTranscriber?: STTTranscriberWithChallenge,
-    synthClassifier?: SynthClassifierInterface,
-    spoofDetector?: SpoofDetectorInterface
+    synthClassifier?: SynthClassifier,
+    spoofDetector?: SpoofDetector
   ): Promise<VerificationResult> {
     const startTime = Date.now();
     

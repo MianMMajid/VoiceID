@@ -4,7 +4,7 @@
  * Task 15.2: Cache TTS challenge audio (100 pre-generated)
  */
 
-import { PhraseBank } from './phrase-bank';
+import { PHRASE_BANK } from './phrase-bank';
 
 export interface CachedChallenge {
   text: string;
@@ -26,13 +26,11 @@ export interface TTSCacheConfig {
  */
 export class TTSCache {
   private cache: Map<string, CachedChallenge> = new Map();
-  private phraseBank: PhraseBank;
   private config: TTSCacheConfig;
   private isInitialized = false;
 
   constructor(config: TTSCacheConfig) {
     this.config = config;
-    this.phraseBank = new PhraseBank();
   }
 
   /**
@@ -65,7 +63,7 @@ export class TTSCache {
    * This would typically be done during deployment, not at runtime
    */
   private async preGenerateChallenges(): Promise<void> {
-    const phrases = this.phraseBank.getAllPhrases();
+    const phrases = PHRASE_BANK;
     const targetCount = Math.min(this.config.cacheSize, phrases.length);
 
     console.log('Pre-generating TTS challenges', { count: targetCount });
@@ -92,7 +90,7 @@ export class TTSCache {
    * Assumes challenges were pre-generated during deployment
    */
   private async loadPreGeneratedChallenges(): Promise<void> {
-    const phrases = this.phraseBank.getAllPhrases();
+    const phrases = PHRASE_BANK;
     const targetCount = Math.min(this.config.cacheSize, phrases.length);
 
     console.log('Loading pre-generated challenges', { count: targetCount });

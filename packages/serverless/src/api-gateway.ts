@@ -58,6 +58,8 @@ export interface HTTPResponse {
 export interface RateLimitStore {
   increment(key: string, ttl: number): Promise<number>;
   get(key: string): Promise<number>;
+  set(key: string, value: number, ttl: number): Promise<void>;
+  delete(key: string): Promise<void>;
 }
 
 /**
@@ -542,5 +544,14 @@ export class InMemoryRateLimitStore implements RateLimitStore {
     }
 
     return entry.count;
+  }
+
+  async set(key: string, value: number, ttl: number): Promise<void> {
+    const now = Date.now();
+    this.store.set(key, { count: value, expiresAt: now + ttl * 1000 });
+  }
+
+  async delete(key: string): Promise<void> {
+    this.store.delete(key);
   }
 }
