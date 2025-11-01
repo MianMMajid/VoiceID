@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import {
   Sheet,
@@ -47,19 +48,15 @@ export function Navbar({ onGetApiKey }: NavbarProps) {
         <div className="flex items-center justify-between h-16 md:h-20">
           {/* Logo */}
           <div className="flex items-center">
-            <a
-              href="#"
-              onClick={(e) => {
-                e.preventDefault();
-                window.scrollTo({ top: 0, behavior: "smooth" });
-              }}
+            <Link
+              href="/"
               className="flex items-center space-x-2 group"
             >
               <Mic className="w-6 h-6 md:w-7 md:h-7 text-neon-green group-hover:text-emerald-500 transition-colors" />
               <span className="text-xl md:text-2xl font-black bg-gradient-to-r from-black to-neon-green/80 bg-clip-text text-transparent">
                 VoiceID
               </span>
-            </a>
+            </Link>
           </div>
 
           {/* Desktop Navigation */}
