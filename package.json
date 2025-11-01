@@ -3,12 +3,15 @@
   "version": "1.0.0",
   "private": true,
   "workspaces": [
-    "packages/*"
+    "packages/client",
+    "packages/shared-types"
   ],
   "scripts": {
     "build": "npm run build --workspaces",
     "test": "npm run test --workspaces",
-    "lint": "npm run lint --workspaces"
+    "lint": "npm run lint --workspaces",
+    "build:backend": "cd backend && npm run build",
+    "test:backend": "cd backend && npm run test"
   },
   "devDependencies": {
     "typescript": "^5.3.3"

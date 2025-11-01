@@ -17,8 +17,10 @@ export * from './session-storage';
 export * from './audit-logger';
 export * from './verification-orchestrator';
 export * from './stt-transcriber';
-export * from './synth-classifier';
-export * from './spoof-detector';
+// Export classes (avoiding interface conflicts)
+export { SynthClassifier } from './synth-classifier';
+export { SpoofDetector } from './spoof-detector';
 export * from './encryption';
-export * from './rate-limiter';
+// Export specific classes to avoid conflicts
+export { InMemoryRateLimitStore, RateLimiter } from './rate-limiter';
 export * from './privacy-controls';

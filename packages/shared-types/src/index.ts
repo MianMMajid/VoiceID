@@ -68,6 +68,8 @@ export interface SpoofResult {
   eer: number;
   isSpoofed: boolean;
   modelVersion: string;
+  warning?: string; // Warning message if confidence is low
+  confidenceMargin?: number; // Difference between bonafide and spoof scores
 }
 
 /**

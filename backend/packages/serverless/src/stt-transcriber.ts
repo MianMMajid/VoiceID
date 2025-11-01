@@ -43,7 +43,7 @@ export class STTTranscriberImpl implements STTTranscriber {
       whisperApiKey: config.whisperApiKey || process.env.WHISPER_API_KEY || '',
       whisperApiUrl: config.whisperApiUrl || process.env.WHISPER_API_URL || 'https://api.openai.com/v1/audio/transcriptions',
       googleApiKey: config.googleApiKey || process.env.GOOGLE_API_KEY || '',
-      timeout: config.timeout || 3000,
+      timeout: config.timeout || 30000, // 30 seconds for larger audio files
       retries: config.retries || 3
     };
   }

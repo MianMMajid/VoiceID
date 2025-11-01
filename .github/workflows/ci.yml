@@ -25,14 +25,23 @@ jobs:
           node-version: ${{ matrix.node-version }}
           cache: 'npm'
       
-      - name: Install dependencies
+      - name: Install frontend dependencies
         run: npm ci
       
-      - name: Run linter
+      - name: Install backend dependencies
+        run: cd backend && npm ci
+      
+      - name: Run frontend linter
         run: npm run lint
       
-      - name: Run tests
+      - name: Run backend linter
+        run: cd backend && npm run lint
+      
+      - name: Run frontend tests
         run: npm test
+      
+      - name: Run backend tests
+        run: cd backend && npm test
       
       - name: Upload coverage reports
         uses: codecov/codecov-action@v4
@@ -58,21 +67,27 @@ jobs:
           node-version: '20.x'
           cache: 'npm'
       
-      - name: Install dependencies
+      - name: Install frontend dependencies
         run: npm ci
       
-      - name: Build packages
+      - name: Install backend dependencies
+        run: cd backend && npm ci
+      
+      - name: Build frontend packages
         run: npm run build
+      
+      - name: Build backend packages
+        run: cd backend && npm run build
       
       - name: Create Lambda deployment package
         run: |
-          cd packages/serverless
+          cd backend/packages/serverless
           mkdir -p dist
           zip -r dist/lambda.zip dist/ node_modules/ package.json
       
       - name: Create Lambda layer package
         run: |
-          cd packages/serverless
+          cd backend/packages/serverless
           mkdir -p layer/nodejs
           cp -r node_modules layer/nodejs/
           cd layer && zip -r ../dist/layer.zip . && cd ..
@@ -82,8 +97,8 @@ jobs:
         with:
           name: lambda-packages
           path: |
-            packages/serverless/dist/lambda.zip
-            packages/serverless/dist/layer.zip
+            backend/packages/serverless/dist/lambda.zip
+            backend/packages/serverless/dist/layer.zip
           retention-days: 7
       
       - name: Upload client build
@@ -115,6 +130,10 @@ jobs:
         with:
           sarif_file: 'trivy-results.sarif'
       
-      - name: Run npm audit
+      - name: Run npm audit (frontend)
         run: npm audit --audit-level=moderate
+        continue-on-error: true
+      
+      - name: Run npm audit (backend)
+        run: cd backend && npm audit --audit-level=moderate
         continue-on-error: true

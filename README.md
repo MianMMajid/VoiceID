@@ -7,28 +7,22 @@ A serverless voice biometrics system for zero-friction account onboarding.
 ```
 voice-liveness-onboarder/
 ├── packages/
-│   ├── client/              # WebRTC audio capture client
-│   │   ├── src/
-│   │   │   ├── index.ts
-│   │   │   └── interfaces.ts
-│   │   ├── package.json
-│   │   └── tsconfig.json
-│   ├── serverless/          # Serverless function implementations
-│   │   ├── src/
-│   │   │   ├── index.ts
-│   │   │   └── interfaces.ts
-│   │   ├── package.json
-│   │   └── tsconfig.json
-│   └── shared-types/        # Shared TypeScript types
-│       ├── src/
-│       │   └── index.ts
-│       ├── package.json
-│       └── tsconfig.json
+│   ├── client/              # WebRTC audio capture client (Frontend)
+│   └── shared-types/        # Shared TypeScript types (used by both frontend & backend)
+├── backend/                 # Backend services and infrastructure
+│   ├── packages/
+│   │   └── serverless/      # Serverless function implementations
+│   ├── scripts/             # Deployment and testing scripts
+│   ├── package.json
+│   └── README.md
+├── frontend/                # Frontend application
 ├── package.json             # Root package with workspaces
 └── README.md
 ```
 
 ## Setup
+
+### Frontend Setup
 
 Install dependencies:
 
@@ -36,27 +30,43 @@ Install dependencies:
 npm install
 ```
 
-Build all packages:
+Build frontend packages:
 
 ```bash
 npm run build
 ```
 
+### Backend Setup
+
+Navigate to the backend directory and install dependencies:
+
+```bash
+cd backend
+npm install
+npm run build
+```
+
 ## Packages
 
-### @vlo/shared-types
-Core data models and TypeScript interfaces used across client and backend:
-- Session, VerificationResult, AuditLog models
-- Enums: SessionStatus, FailureReason, AuditEvent
-- Service interfaces and types
+### Frontend
 
-### @vlo/client
+#### @vlo/client
 Browser-based WebRTC audio capture and session management:
 - VLOClient interface for voice verification
 - Audio capture and streaming
 - UI integration
 
-### @vlo/serverless
+### Backend
+
+See [backend/README.md](./backend/README.md) for detailed backend documentation.
+
+#### @vlo/shared-types
+Core data models and TypeScript interfaces used across client and backend:
+- Session, VerificationResult, AuditLog models
+- Enums: SessionStatus, FailureReason, AuditEvent
+- Service interfaces and types
+
+#### @vlo/serverless
 Serverless function interfaces and implementations:
 - VerificationOrchestrator
 - TTSGenerator

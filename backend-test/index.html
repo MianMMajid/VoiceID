@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VLO Backend Tester</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            color: white;
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 2.5rem;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .step {
+            background: white;
+            border-radius: 12px;
+            padding: 25px;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        .step.disabled {
+            opacity: 0.5;
+            pointer-events: none;
+        }
+
+        .step-number {
+            display: inline-block;
+            width: 40px;
+            height: 40px;
+            background: #667eea;
+            color: white;
+            border-radius: 50%;
+            text-align: center;
+            line-height: 40px;
+            font-weight: bold;
+            font-size: 20px;
+            margin-right: 15px;
+        }
+
+        .step-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .step-title {
+            color: #667eea;
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+
+        .challenge-phrase {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 12px;
+            text-align: center;
+            font-size: 1.8rem;
+            font-weight: 600;
+            margin: 20px 0;
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.3);
+            line-height: 1.5;
+        }
+
+        .challenge-phrase.hidden {
+            display: none;
+        }
+
+        .session-info {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+        }
+
+        .session-info strong {
+            color: #667eea;
+        }
+
+        .card {
+            background: white;
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        .card h2 {
+            color: #667eea;
+            margin-bottom: 20px;
+            font-size: 1.5rem;
+            border-bottom: 2px solid #667eea;
+            padding-bottom: 10px;
+        }
+
+        .input-group {
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            color: #333;
+            font-weight: 500;
+        }
+
+        input[type="text"],
+        input[type="url"],
+        select,
+        textarea {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #e0e0e0;
+            border-radius: 6px;
+            font-size: 14px;
+            transition: border-color 0.3s;
+        }
+
+        input:focus,
+        select:focus,
+        textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        textarea {
+            min-height: 100px;
+            font-family: 'Courier New', monospace;
+            resize: vertical;
+        }
+
+        button {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            width: 100%;
+            margin-top: 10px;
+        }
+
+        button:hover {
+            background: #5568d3;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .recording {
+            background: #ef4444 !important;
+        }
+
+        .recording:hover {
+            background: #dc2626 !important;
+        }
+
+        .audio-controls {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .audio-controls button {
+            flex: 1;
+        }
+
+        .file-input-wrapper {
+            position: relative;
+            overflow: hidden;
+            display: inline-block;
+            width: 100%;
+        }
+
+        .file-input-wrapper input[type=file] {
+            position: absolute;
+            left: -9999px;
+        }
+
+        .file-input-label {
+            display: block;
+            padding: 12px 24px;
+            background: #10b981;
+            color: white;
+            text-align: center;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: 600;
+        }
+
+        .file-input-label:hover {
+            background: #059669;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(16, 185, 129, 0.4);
+        }
+
+        .file-name {
+            margin-top: 10px;
+            padding: 8px;
+            background: #f3f4f6;
+            border-radius: 4px;
+            font-size: 14px;
+            color: #666;
+        }
+
+        audio {
+            width: 100%;
+            margin-top: 10px;
+        }
+
+        .output {
+            background: #1e293b;
+            color: #e2e8f0;
+            padding: 20px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            max-height: 400px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+
+        .status {
+            padding: 10px;
+            border-radius: 6px;
+            margin-bottom: 15px;
+            font-weight: 500;
+        }
+
+        .status.success {
+            background: #d1fae5;
+            color: #065f46;
+        }
+
+        .status.error {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .status.info {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+
+        .timer {
+            text-align: center;
+            font-size: 2rem;
+            font-weight: bold;
+            color: #667eea;
+            margin: 15px 0;
+        }
+
+        .visualizer {
+            width: 100%;
+            height: 60px;
+            background: #f3f4f6;
+            border-radius: 6px;
+            margin: 15px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎤 Voice Liveness Verification Test</h1>
+        
+        <!-- Step 1: Create Session -->
+        <div class="step" id="step1">
+            <div class="step-header">
+                <span class="step-number">1</span>
+                <h2 class="step-title">Create Verification Session</h2>
+            </div>
+            <p style="margin-bottom: 15px; color: #666;">Start by creating a new verification session. This will generate a unique challenge phrase for you to say.</p>
+            <button id="createSessionBtn" style="background: #10b981;">Create New Session</button>
+            <div id="sessionInfo" class="session-info" style="display: none;">
+                <strong>Session ID:</strong> <span id="displaySessionId"></span><br>
+                <strong>Status:</strong> <span id="displayStatus">pending</span>
+            </div>
+        </div>
+
+        <!-- Step 2: Challenge Phrase -->
+        <div class="step disabled" id="step2">
+            <div class="step-header">
+                <span class="step-number">2</span>
+                <h2 class="step-title">Your Challenge Phrase</h2>
+            </div>
+            <p style="margin-bottom: 15px; color: #666;">Please read this phrase clearly when recording:</p>
+            <div class="challenge-phrase" id="challengePhrase">
+                Waiting for session...
+            </div>
+        </div>
+
+        <!-- Step 3: Record Audio -->
+        <div class="step disabled" id="step3">
+            <div class="step-header">
+                <span class="step-number">3</span>
+                <h2 class="step-title">Record Your Voice</h2>
+            </div>
+            <p style="margin-bottom: 15px; color: #666;">Click the button below and say the challenge phrase clearly.</p>
+            
+            <button id="recordBtn">🎤 Start Recording</button>
+            <div class="timer" id="timer">00:00</div>
+            <canvas class="visualizer" id="visualizer"></canvas>
+            
+            <div id="audioPreview"></div>
+            
+            <div style="margin-top: 20px;">
+                <p style="color: #666; margin-bottom: 10px;">Or upload an audio file:</p>
+                <div class="file-input-wrapper">
+                    <input type="file" id="audioFile" accept="audio/*">
+                    <label for="audioFile" class="file-input-label">📁 Choose Audio File</label>
+                </div>
+                <div id="fileName" class="file-name" style="display: none;"></div>
+            </div>
+        </div>
+
+        <!-- Step 4: Submit Audio -->
+        <div class="step disabled" id="step4">
+            <div class="step-header">
+                <span class="step-number">4</span>
+                <h2 class="step-title">Submit for Verification</h2>
+            </div>
+            <p style="margin-bottom: 15px; color: #666;">Send your recording to the backend for verification.</p>
+            <button id="sendAudioBtn" disabled>📤 Submit Audio</button>
+            <div id="uploadStatus"></div>
+        </div>
+
+        <!-- Step 5: View Results -->
+        <div class="step disabled" id="step5">
+            <div class="step-header">
+                <span class="step-number">5</span>
+                <h2 class="step-title">Verification Results</h2>
+            </div>
+            <p style="margin-bottom: 15px; color: #666;">Check the verification results.</p>
+            <button id="getResultBtn">🔍 Get Results</button>
+            <div id="resultOutput" class="output" style="margin-top: 20px; display: none;">No results yet...</div>
+        </div>
+
+        <!-- Debug Panel (Collapsible) -->
+        <div class="step" style="margin-top: 40px;">
+            <div class="step-header">
+                <h2 class="step-title" style="cursor: pointer;" onclick="toggleDebug()">🔧 Debug Info (Click to expand)</h2>
+            </div>
+            <div id="debugPanel" style="display: none;">
+                <div style="margin-bottom: 15px;">
+                    <label>API URL:</label>
+                    <input type="url" id="apiUrl" value="http://localhost:3000" style="width: 100%; margin-top: 5px;">
+                </div>
+                <h3 style="color: #667eea; margin-top: 20px;">Request:</h3>
+                <div class="output" id="requestOutput">No request sent yet...</div>
+                <h3 style="color: #667eea; margin-top: 20px;">Response:</h3>
+                <div class="output" id="responseOutput">No response yet...</div>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>

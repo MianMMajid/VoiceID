@@ -34,14 +34,14 @@ export const handler = async (
   // Check if this is a warmer invocation
   if (event.warmer) {
     console.log('Warmer invocation detected', {
-      instanceId: context.requestId,
+      instanceId: context.awsRequestId,
       coldStart,
       concurrency: event.concurrency || 1,
     });
 
     return {
       warmed: true,
-      instanceId: context.requestId,
+      instanceId: context.awsRequestId,
       timestamp: Date.now(),
       coldStart,
     };
@@ -49,13 +49,13 @@ export const handler = async (
 
   // Regular invocation
   console.log('Regular invocation', {
-    instanceId: context.requestId,
+    instanceId: context.awsRequestId,
     coldStart,
   });
 
   return {
     warmed: false,
-    instanceId: context.requestId,
+    instanceId: context.awsRequestId,
     timestamp: Date.now(),
     coldStart,
   };
@@ -80,13 +80,13 @@ export const warmerMiddleware = async (
     isColdStart = false;
 
     console.log('Warmer middleware: keeping function warm', {
-      instanceId: context.requestId,
+      instanceId: context.awsRequestId,
       coldStart,
     });
 
     return {
       warmed: true,
-      instanceId: context.requestId,
+      instanceId: context.awsRequestId,
       timestamp: Date.now(),
       coldStart,
     };
@@ -94,7 +94,7 @@ export const warmerMiddleware = async (
 
   // Mark that cold start has been handled
   if (isColdStart) {
-    console.log('Cold start detected', { instanceId: context.requestId });
+    console.log('Cold start detected', { instanceId: context.awsRequestId });
     isColdStart = false;
   }
 
