@@ -43,7 +43,7 @@ async function testOpenAIWhisper(): Promise<TestResult> {
     const testAudio = createTestAudioBuffer();
     
     const formData = new FormData();
-    const audioBlob = new Blob([testAudio], { type: 'audio/wav' });
+    const audioBlob = new Blob([new Uint8Array(testAudio)], { type: 'audio/wav' });
     formData.append('file', audioBlob, 'test.wav');
     formData.append('model', 'whisper-1');
 
@@ -177,7 +177,7 @@ async function testElevenLabsSynthDetection(): Promise<TestResult> {
     const testAudio = createTestAudioBuffer();
     
     const formData = new FormData();
-    const audioBlob = new Blob([testAudio], { type: 'audio/wav' });
+    const audioBlob = new Blob([new Uint8Array(testAudio)], { type: 'audio/wav' });
     formData.append('audio', audioBlob, 'test.wav');
 
     // Note: Synthetic voice detection may require a specific subscription tier
